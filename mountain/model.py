@@ -20,7 +20,10 @@ class Critic(nn.Module):
         self.to(self.device)
 
     def forward(self, state, action):
-        pass
+        x = F.relu(self.fc1(state))
+        x = torch.cat((x, action), dim=1)
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
 
 class Actor(nn.Module):
     def __init__(self, state_size, action_size, low=-1.0, high=1.0, seed=None):

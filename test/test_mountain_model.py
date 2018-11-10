@@ -33,8 +33,8 @@ class TestGymModel(unittest.TestCase):
     def test_can_create_critic(self):
         critic = Critic(self.state_size, self.action_size)
         actor = Actor(self.state_size, self.action_size)
-        
+
         state = self.tensor(self.state)
         action = actor(state)
-        q = critic(state, action)
+        q = critic(state.unsqueeze(0), action.unsqueeze(0))
         self.assertIsNotNone(q)
