@@ -1,3 +1,4 @@
+import os
 import unittest
 import pdb
 
@@ -68,4 +69,10 @@ class TestDDPGAgent(unittest.TestCase):
         action = agent.act(state)
         next_state, reward, done, _ = self.env.step(action)
         agent.step(state, action, reward, next_state, done)
+
+    def test_can_save_agent(self):
+        save_f = 'saved_models/test.ckpt'
+        agent = Agent(*self.agent_params)
+        agent.save(save_f)
+        self.assertTrue(os.path.exists(save_f))
         

@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -62,6 +63,15 @@ class Agent():
         if learn:
             action += self.noise.sample()
         return np.clip(action, self.action_low, self.action_high)
+
+    def save(self, path):
+        dirn = os.path.dirname(path)
+        if not os.path.exists(dirn):
+            os.mkdir(dirn)
+        params = {}
+        params['actor'] = self.actor.state_dict()
+        params['critic'] = self.critic.state_dict()
+        torch.save(params, path)
 
     def step(self, state, action, reward, next_state, done):
         #pylint: disable=line-too-long
