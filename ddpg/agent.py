@@ -11,7 +11,7 @@ DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 class Agent():
     def __init__(self, state_size, action_size, actor, critic,
                  action_low=-1.0, action_high=1.0,
-                 lrate_critic=1e-4, lrate_actor=1e-3, tau=0.01, 
+                 lrate_critic=10e-3, lrate_actor=10e-4, tau=0.001,
                  buffer_size=1e5, batch_size=64, gamma=0.99,
                  exploration_mu=0.0, exploration_theta=0.15,
                  exploration_sigma=0.20,
@@ -51,7 +51,7 @@ class Agent():
 
         # reset agent for training
         self.reset_episode()
-        self.it = 0 
+        self.it = 0
 
     def reset_episode(self):
         self.noise.reset()
