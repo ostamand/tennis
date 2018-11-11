@@ -70,9 +70,14 @@ class TestDDPGAgent(unittest.TestCase):
         next_state, reward, done, _ = self.env.step(action)
         agent.step(state, action, reward, next_state, done)
 
-    def test_can_save_agent(self):
+    def test_can_save_restore_agent(self):
         save_f = 'saved_models/test.ckpt'
         agent = Agent(*self.agent_params)
         agent.save(save_f)
         self.assertTrue(os.path.exists(save_f))
+        agent2 = Agent(*self.agent_params, restore=save_f)
+        self.assertEqual(agent.actor.fc1.weight[0, 0], agent2.actor.fc1.weight[0, 0])
+        self.assertEqual(agent.actor_target.fc1.weight[0, 0], agent2.actor_target.fc1.weight[0, 0])
+        self.assertEqual(agent.critic.fc1.weight[0, 0], agent2.critic.fc1.weight[0, 0])
+        self.assertEqual(agent.critic_target.fc1.weight[0, 0], agent2.critic_target.fc1.weight[0, 0])
         

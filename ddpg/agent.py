@@ -15,7 +15,7 @@ class Agent():
                  lrate_critic=10e-3, lrate_actor=10e-4, tau=0.001,
                  buffer_size=1e5, batch_size=64, gamma=0.99,
                  exploration_mu=0.0, exploration_theta=0.15,
-                 exploration_sigma=0.20,
+                 exploration_sigma=0.20, restore=None,
                  seed=None):
         self.state_size = state_size
         self.action_size = action_size
@@ -26,6 +26,7 @@ class Agent():
         self.lrate_actor = lrate_actor
         self.tau = tau
         self.gamma = gamma
+        self.restore = restore
         self.batch_size = int(batch_size)
         self.buffer_size = int(buffer_size)
         self.device = torch.device(DEVICE)
@@ -40,6 +41,14 @@ class Agent():
         self.critic = critic(state_size, action_size, seed=self.seed)
         self.critic_target = critic(state_size, action_size, seed=self.seed)
 
+        # restore networks if needed
+        if restore is not None:
+            checkpoint = torch.load(restore, map_location=DEVICE)
+            self.actor.load_state_dict(checkpoint['actor'])
+            self.actor_target.load_state_dict(checkpoint['actor'])
+            self.critic.load_state_dict(checkpoint['critic'])
+            self.critic_target.load_state_dict(checkpoint['critic'])
+   
         # optimizer
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=lrate_actor)
         self.critic_opt = optim.Adam(self.critic.parameters(), lr=lrate_critic)
