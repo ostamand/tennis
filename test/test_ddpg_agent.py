@@ -17,6 +17,7 @@ def fill_replay_buffer(env, agent, n=100):
             state = env.reset()
         else:
             state = next_state
+    agent.it = i+1
 
 class TestDDPGAgent(unittest.TestCase):
 
@@ -60,5 +61,11 @@ class TestDDPGAgent(unittest.TestCase):
         self.assertEqual(next_state_b.shape[0], agent.batch_size)
         self.assertEqual(done_b.shape[0], agent.batch_size)
 
-
-    
+    def test_can_step_agent(self):
+        agent = Agent(*self.agent_params)
+        fill_replay_buffer(self.env, agent, n=100)
+        state = self.env.reset()
+        action = agent.act(state)
+        next_state, reward, done, _ = self.env.step(action)
+        agent.step(state, action, reward, next_state, done)
+        

@@ -1,4 +1,6 @@
 import torch
+import torch.optim as optim
+import torch.nn.functional as F
 import numpy as np
 
 from ddpg.noise import OUNoise
@@ -9,7 +11,8 @@ DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 class Agent():
     def __init__(self, state_size, action_size, actor, critic,
                  action_low=-1.0, action_high=1.0,
-                 lrate=1e-4, tau=0.01, buffer_size=1e5, batch_size=64,
+                 lrate_critic=1e-4, lrate_actor=1e-3, tau=0.01, 
+                 buffer_size=1e5, batch_size=64, gamma=0.99,
                  exploration_mu=0.0, exploration_theta=0.15,
                  exploration_sigma=0.20,
                  seed=None):
@@ -18,8 +21,10 @@ class Agent():
         self.action_low = action_low
         self.action_high = action_high
         self.seed = seed if seed else 0
-        self.lrate = lrate
+        self.lrate_critic = lrate_critic
+        self.lrate_actor = lrate_actor
         self.tau = tau
+        self.gamma = gamma
         self.batch_size = int(batch_size)
         self.buffer_size = int(buffer_size)
         self.device = torch.device(DEVICE)
@@ -34,17 +39,21 @@ class Agent():
         self.critic = critic(state_size, action_size, seed=self.seed)
         self.critic_target = critic(state_size, action_size, seed=self.seed)
 
-        # noise 
+        # optimizer
+        self.actor_opt = optim.Adam(self.actor.parameters(), lr=lrate_actor)
+        self.critic_opt = optim.Adam(self.critic.parameters(), lr=lrate_critic)
+
+        # noise
         self.noise = OUNoise(action_size, exploration_mu, exploration_theta, exploration_sigma)
 
         # replay buffer
         self.replay_buffer = ReplayBuffer(self.device, self.buffer_size, self.batch_size)
 
-        # reset agent for training 
+        # reset agent for training
         self.reset_episode()
+        self.it = 0 
 
     def reset_episode(self):
-        self.it = 0
         self.noise.reset()
 
     def act(self, state, learn=True):
@@ -54,8 +63,35 @@ class Agent():
             action += self.noise.sample()
         return np.clip(action, self.action_low, self.action_high)
 
-    def step(self):
-        pass 
+    def step(self, state, action, reward, next_state, done):
+        #pylint: disable=line-too-long
+        self.replay_buffer.add(state, action, reward, next_state, done)
+        self.it += 1
+        if self.it < self.batch_size:
+            return
+        # learn from mini-batch of replay buffer 
+        state_b, action_b, reward_b, next_state_b, done_b = self.replay_buffer.sample()
+
+        # calculate td target 
+        with torch.no_grad():
+            y_b = reward_b.unsqueeze(1) + self.gamma * \
+             self.critic_target(next_state_b, self.actor_target(next_state_b)) * (1-done_b.unsqueeze(1))
+
+        # update critic
+        critic_loss = F.smooth_l1_loss(self.critic(state_b, action_b), y_b)
+        self.critic.zero_grad()
+        critic_loss.backward()
+        self.critic_opt.step()
+
+        # update actor
+        action = self.actor(state_b)
+        actor_loss = -self.critic(state_b, action).mean()
+        self.actor.zero_grad()
+        actor_loss.backward()
+        self.actor_opt.step()
+
+        # soft update networks
+        self.soft_update()
 
     def soft_update(self):
         """Soft update of target network
