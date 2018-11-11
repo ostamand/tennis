@@ -9,7 +9,7 @@ def watch(env, agent, max_steps):
     for step_i in range(max_steps):
         env.render()
         action = agent.act(state, learn=False)
-        state, action, reward, done, _ = env.step(action)
+        state, reward, done, _ = env.step(action)
         score += reward
         if done:
             break
