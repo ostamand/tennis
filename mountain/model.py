@@ -11,8 +11,8 @@ class Critic(nn.Module):
         self.action_size = action_size
         self.seed = seed
         self.device = torch.device(DEVICE)
-        if seed:
-            torch.manager_seed(seed)
+        if seed is not None:
+            torch.manual_seed(seed)
 
         self.fc1 = nn.Linear(state_size, 100)
         self.fc2 = nn.Linear(100+action_size, 100)
@@ -34,7 +34,7 @@ class Actor(nn.Module):
         self.low = low
         self.high = high
         self.device = torch.device(DEVICE)
-        if seed:
+        if seed is not None:
             torch.manual_seed(seed)
 
         self.fc1 = nn.Linear(state_size, 100)
