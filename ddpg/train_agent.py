@@ -2,9 +2,10 @@
 from collections import deque
 import numpy as np
 
-def train(env, agent, episodes=1000, steps=200, log_each=10):
+def train(env, agent, episodes=1000, steps=200, 
+          log_each=10, save_thresh=90.0, save_file='saved_models/ddpg.ckpt'):
     scores = deque(maxlen=100)
-
+    last_saved = 0
     for ep_i in range(episodes):
         state = env.reset()
         agent.reset_episode()
@@ -18,7 +19,15 @@ def train(env, agent, episodes=1000, steps=200, log_each=10):
             if done: 
                 break
         scores.append(score)
+
         summary = f'Episode: {ep_i+1}/{episodes}, Reward: {score:.2f}'
         if len(scores) >= 100:
-            summary += f', Score: {np.mean(scores):.2f}'
+            mean = np.mean(scores)
+            summary += f', Score: {mean:.2f}'
+
+            if mean > save_thresh and mean > last_saved:
+                summary += ' (saved)'
+                last_saved = score 
+                agent.save(save_file)
+
         print(summary)

@@ -48,7 +48,7 @@ class Agent():
             self.actor_target.load_state_dict(checkpoint['actor'])
             self.critic.load_state_dict(checkpoint['critic'])
             self.critic_target.load_state_dict(checkpoint['critic'])
-   
+
         # optimizer
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=lrate_actor)
         self.critic_opt = optim.Adam(self.critic.parameters(), lr=lrate_critic)

@@ -1,4 +1,5 @@
 # pylint: skip-file
+import random
 from ddpg.agent import Agent
 from mountain.model import Actor, Critic
 from ddpg.train_agent import train
@@ -24,6 +25,8 @@ if __name__ == '__main__':
     episodes = 1000
     steps = 500
     log_each = 10
+    save_thresh = 90.0
+    save_file = 'saved_models/mountain_ddpg.ckpt'
 
     # environment 
     env = gym.make('MountainCarContinuous-v0')
@@ -31,7 +34,9 @@ if __name__ == '__main__':
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.shape[0]
 
-    # TODO rnd seed
+    # seed
+    seed = random.randint(0,1000)
+
     # agent
     agent = Agent(
         state_size, action_size, Actor, Critic, 
@@ -43,10 +48,12 @@ if __name__ == '__main__':
         gamma=gamma,
         exploration_mu=exploration_mu,
         exploration_theta=exploration_theta,
-        exploration_sigma=exploration_sigma
+        exploration_sigma=exploration_sigma,
+        seed=seed
     )
 
     train(
         env, agent,
-        episodes=episodes, steps=steps, log_each=log_each
+        episodes=episodes, steps=steps,
+        log_each=log_each, save_thresh=save_thresh, save_file=save_file
     )
