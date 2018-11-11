@@ -67,10 +67,15 @@ class Agent():
         self.noise.reset()
 
     def act(self, state, learn=True):
+        if not learn:
+            self.actor.eval()
+
         with torch.no_grad():
             action = self.actor(self.tensor(state)).cpu().numpy()
         if learn:
             action += self.noise.sample()
+
+        self.actor.train()
         return np.clip(action, self.action_low, self.action_high)
 
     def save(self, path):

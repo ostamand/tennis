@@ -27,7 +27,7 @@ def train(env, agent, episodes=1000, steps=200,
 
             if mean > save_thresh and mean > last_saved:
                 summary += ' (saved)'
-                last_saved = score 
+                last_saved = mean 
                 agent.save(save_file)
 
         print(summary)
