@@ -16,12 +16,13 @@ class Agent():
                  buffer_size=1e5, batch_size=64, gamma=0.99,
                  exploration_mu=0.0, exploration_theta=0.15,
                  exploration_sigma=0.20, restore=None,
+                 update_every=1, train_critic=True,
                  seed=None):
         self.state_size = state_size
         self.action_size = action_size
         self.action_low = action_low
         self.action_high = action_high
-        self.seed = seed if seed else 0
+        self.seed = seed if seed else np.random.randint(100)
         self.lrate_critic = lrate_critic
         self.lrate_actor = lrate_actor
         self.tau = tau
@@ -29,6 +30,8 @@ class Agent():
         self.restore = restore
         self.batch_size = int(batch_size)
         self.buffer_size = int(buffer_size)
+        self.update_every = update_every
+        self.train_critic = train_critic
         self.device = torch.device(DEVICE)
 
         # actors networks
@@ -91,21 +94,23 @@ class Agent():
         #pylint: disable=line-too-long
         self.replay_buffer.add(state, action, reward, next_state, done)
         self.it += 1
-        if self.it < self.batch_size:
+        if self.it < self.batch_size or self.it % self.update_every != 0:
             return
-        # learn from mini-batch of replay buffer 
+
+        # learn from mini-batch of replay buffer
         state_b, action_b, reward_b, next_state_b, done_b = self.replay_buffer.sample()
 
-        # calculate td target 
+        # calculate td target
         with torch.no_grad():
             y_b = reward_b.unsqueeze(1) + self.gamma * \
              self.critic_target(next_state_b, self.actor_target(next_state_b)) * (1-done_b.unsqueeze(1))
 
         # update critic
-        critic_loss = F.smooth_l1_loss(self.critic(state_b, action_b), y_b)
-        self.critic.zero_grad()
-        critic_loss.backward()
-        self.critic_opt.step()
+        if self.train_critic:
+            critic_loss = F.smooth_l1_loss(self.critic(state_b, action_b), y_b)
+            self.critic.zero_grad()
+            critic_loss.backward()
+            self.critic_opt.step()
 
         # update actor
         action = self.actor(state_b)
@@ -115,17 +120,22 @@ class Agent():
         self.actor_opt.step()
 
         # soft update networks
-        self.soft_update()
+        # critic only if trained
+        # actor always
+        if self.train_critic:
+            self.soft_update('critic')
+        self.soft_update('actor')
 
-    def soft_update(self):
+    def soft_update(self, network):
         """Soft update of target network
         θ_target = τ*θ_local + (1 - τ)*θ_target
         """
-        for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
-            target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
-
-        for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
-            target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
+        if network == 'actor':
+            for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
+                target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
+        if network == 'critic':
+            for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
+                target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
 
     def tensor(self, x):
         return torch.from_numpy(x).float().to(self.device)
