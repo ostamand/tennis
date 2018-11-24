@@ -20,7 +20,7 @@ class UnityEnv():
     def reset(self, train=True):
         env_info = self.env.reset(train_mode=train)[self.brain_name]
         # combine both agent state
-        return env_info.vector_observations.reshape(-1)
+        return env_info.vector_observations
 
     def close(self):
         self.env.close()
@@ -29,7 +29,7 @@ class UnityEnv():
         actions = np.clip(actions, -1, 1)
         env_info = self.env.step(actions)[self.brain_name]
         # combine both agent state
-        next_states = env_info.vector_observations.reshape(-1)
+        next_states = env_info.vector_observations
         rewards = env_info.rewards
         dones = np.array(env_info.local_done).astype(np.float)
         return next_states, np.array(rewards), dones
