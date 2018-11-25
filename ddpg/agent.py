@@ -15,9 +15,8 @@ class Agent():
                  lrate_critic=10e-3, lrate_actor=10e-4, tau=0.001,
                  buffer_size=1e5, batch_size=64, gamma=0.99,
                  exploration_mu=0.0, exploration_theta=0.15,
-                 exploration_sigma=0.20, restore=None,
-                 update_every=1, train_critic=True,
-                 seed=None):
+                 exploration_sigma=0.20, restore=None, weight_decay=0.,
+                 update_every=1, update_repeat=1, seed=None):
         self.state_size = state_size
         self.action_size = action_size
         self.action_low = action_low
@@ -31,8 +30,9 @@ class Agent():
         self.batch_size = int(batch_size)
         self.buffer_size = int(buffer_size)
         self.update_every = update_every
-        self.train_critic = train_critic
         self.device = torch.device(DEVICE)
+        self.weight_decay = weight_decay
+        self.update_repeat = update_repeat
 
         # actors networks
         self.actor = actor(state_size, action_size,
@@ -53,8 +53,8 @@ class Agent():
             self.critic_target.load_state_dict(checkpoint['critic'])
 
         # optimizer
-        self.actor_opt = optim.Adam(self.actor.parameters(), lr=lrate_actor)
-        self.critic_opt = optim.Adam(self.critic.parameters(), lr=lrate_critic)
+        self.actor_opt = optim.Adam(self.actor.parameters(), lr=lrate_actor, weight_decay=self.weight_decay)
+        self.critic_opt = optim.Adam(self.critic.parameters(), lr=lrate_critic, weight_decay=self.weight_decay)
 
         # noise
         self.noise = OUNoise(action_size, exploration_mu, exploration_theta, exploration_sigma)
@@ -96,7 +96,10 @@ class Agent():
         self.it += 1
         if self.it < self.batch_size or self.it % self.update_every != 0:
             return
+        for _ in range(self.update_repeat):
+            self.learn()
 
+    def learn(self):
         # learn from mini-batch of replay buffer
         state_b, action_b, reward_b, next_state_b, done_b = self.replay_buffer.sample()
 
@@ -106,11 +109,10 @@ class Agent():
              self.critic_target(next_state_b, self.actor_target(next_state_b)) * (1-done_b.unsqueeze(1))
 
         # update critic
-        if self.train_critic:
-            critic_loss = F.smooth_l1_loss(self.critic(state_b, action_b), y_b)
-            self.critic.zero_grad()
-            critic_loss.backward()
-            self.critic_opt.step()
+        critic_loss = F.smooth_l1_loss(self.critic(state_b, action_b), y_b)
+        self.critic.zero_grad()
+        critic_loss.backward()
+        self.critic_opt.step()
 
         # update actor
         action = self.actor(state_b)
@@ -122,20 +124,16 @@ class Agent():
         # soft update networks
         # critic only if trained
         # actor always
-        if self.train_critic:
-            self.soft_update('critic')
-        self.soft_update('actor')
+        self.soft_update()
 
-    def soft_update(self, network):
+    def soft_update(self):
         """Soft update of target network
         θ_target = τ*θ_local + (1 - τ)*θ_target
         """
-        if network == 'actor':
-            for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
-                target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
-        if network == 'critic':
-            for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
-                target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
+        for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
+            target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
+        for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
+            target_param.data.copy_(self.tau*param.data+(1-self.tau)*target_param.data)
 
     def tensor(self, x):
         return torch.from_numpy(x).float().to(self.device)

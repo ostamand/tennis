@@ -14,10 +14,12 @@ class Critic(nn.Module):
         if seed is not None:
             torch.manual_seed(seed)
 
-        self.fc1 = nn.Linear(state_size, 100)
-        self.fc2 = nn.Linear(100+action_size, 100)
-        self.fc3 = nn.Linear(100, 1)
+        self.fc1 = nn.Linear(state_size, 256)
+        self.fc2 = nn.Linear(256+action_size, 128)
+        self.fc3 = nn.Linear(128, 1)
         self.to(self.device)
+
+        self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
     def forward(self, state, action):
         x = F.relu(self.fc1(state))
@@ -37,10 +39,12 @@ class Actor(nn.Module):
         if seed is not None:
             torch.manual_seed(seed)
 
-        self.fc1 = nn.Linear(state_size, 100)
-        self.fc2 = nn.Linear(100, 100)
-        self.fc3 = nn.Linear(100, action_size)
+        self.fc1 = nn.Linear(state_size, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, action_size)
         self.to(self.device)
+
+        self.fc3.weight.data.uniform_(-3e-3, 3e-3)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
