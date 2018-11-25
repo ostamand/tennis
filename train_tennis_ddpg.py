@@ -4,6 +4,7 @@ from unity_env import UnityEnv
 from tennis.model import Actor, Critic
 import numpy as np
 from collections import deque
+from tensorboardX import SummaryWriter
 
 # fill replay buffer with rnd actions
 def init_replay_buffer(env, agent, steps):
@@ -18,6 +19,8 @@ def init_replay_buffer(env, agent, steps):
 
 def train(env, agent, episodes, steps):
     scores = deque(maxlen=100)
+    writer = SummaryWriter()
+    last_saved = 0
     for ep_i in range(episodes):
         agent.reset_episode()
         state = env.reset()
@@ -34,10 +37,16 @@ def train(env, agent, episodes, steps):
                 break
         # log episode results
         scores.append(score.max())
-        summary = f'Episode: {ep_i+1}/{episodes}, Steps: {agent.it:d}, Score Agt. #1: {score[0]:.2f}, Score Agt. #2: {score[1]:.2f}'
+        summary = f'Episode: {ep_i+1}/{episodes}, Steps: {agent.it:d}, Noise: {agent.noise_scale:.2f}, Score Agt. #1: {score[0]:.2f}, Score Agt. #2: {score[1]:.2f}'
         if len(scores) >= 100:
             mean = np.mean(scores)
             summary += f', Score: {mean:.3f}'
+            writer.add_scalar('data/score', mean, ep_i)
+            if mean > 0.50 and mean > last_saved:
+                summary += " (saved)"
+                last_saved = mean
+                agent.save('saved_models/tennis_ddpg.ckpt')
+
         print(summary)
 
 if __name__ == '__main__':
@@ -66,6 +75,7 @@ if __name__ == '__main__':
         update_every=1, 
         update_repeat=1,
         weight_decay=0, 
+        noise_decay=0.999995
     )
 
     # start with rnd actions

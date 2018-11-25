@@ -14,7 +14,7 @@ class Agent():
                  action_low=-1.0, action_high=1.0,
                  lrate_critic=10e-3, lrate_actor=10e-4, tau=0.001,
                  buffer_size=1e5, batch_size=64, gamma=0.99,
-                 exploration_mu=0.0, exploration_theta=0.15,
+                 exploration_mu=0.0, exploration_theta=0.15, noise_decay=1., 
                  exploration_sigma=0.20, restore=None, weight_decay=0.,
                  update_every=1, update_repeat=1, seed=None):
         self.state_size = state_size
@@ -33,6 +33,7 @@ class Agent():
         self.device = torch.device(DEVICE)
         self.weight_decay = weight_decay
         self.update_repeat = update_repeat
+        self.noise_decay = noise_decay
 
         # actors networks
         self.actor = actor(state_size, action_size,
@@ -58,6 +59,7 @@ class Agent():
 
         # noise
         self.noise = OUNoise(action_size, exploration_mu, exploration_theta, exploration_sigma)
+        self.noise_scale = 1.0
 
         # replay buffer
         self.replay_buffer = ReplayBuffer(self.device, self.buffer_size, self.batch_size)
@@ -76,7 +78,8 @@ class Agent():
         with torch.no_grad():
             action = self.actor(self.tensor(state)).cpu().numpy()
         if learn:
-            action += self.noise.sample()
+            action += self.noise.sample() * self.noise_scale
+            self.noise_scale = max(self.noise_scale * self.noise_decay, 0.01)
 
         self.actor.train()
         return np.clip(action, self.action_low, self.action_high)
