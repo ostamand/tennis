@@ -13,7 +13,7 @@ Each timestep, each agent recieves:
 
 - A 24 element long vector representing the current state
 
-The actions space is continuous and consists of the movement toward net or away from net, and jumping.
+The actions space is continuous and consists of the movement toward or away from the net, and jumping.
 
 Finally, the environment is considered solved when the average score of the last 100 episodes is greater than +0.5.
 
@@ -63,7 +63,7 @@ conda install pytorch cuda92 -c pytorch
 Clone this repository locally. 
 
 ```
-git clone https://github.com/ostamand/continuous-control.git
+git clone https://github.com/ostamand/tennis.git
 ```
 
 Finally, download the environment which corresponds to your operationg system. Copy/paste the extracted content to the `data` subfolder. 

@@ -5,7 +5,7 @@ The [DDPG (Deep Deterministic Policy Gradient)](https://arxiv.org/abs/1509.02971
 
 The figure below illustrates the average score over the last 100 episodes obtained during training.
 
-![Average Score](assets/score_training.png)
+![Average Score](assets/score_train.png)
 
 It is observed that, with the proposed network architecture and hyperparameters, the learning is stable. The environment is solved in 603 episodes and the final score converges to a maximum of XX.
 
