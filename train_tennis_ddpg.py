@@ -75,7 +75,7 @@ if __name__ == '__main__':
         update_every=1, 
         update_repeat=1,
         weight_decay=0, 
-        noise_decay=0.999995
+        noise_decay=0.99995
     )
 
     # start with rnd actions
