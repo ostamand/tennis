@@ -1,6 +1,6 @@
 # Tennis
 
-![DDPG Tennis](assets/unity_reacher_ppo_agent.gif)
+![DDPG Tennis](assets/unity_tennis_ddpg_agent.gif)
 
 The environment is composed of two agents each one controlling a racket to bounce a ball over a net. 
 
@@ -25,14 +25,14 @@ To train the agent simply run `python train_tennis_ddpg.py`. All hyperparameters
 
 ## Results 
 
-A [trained model](saved_models/agent_ddpg.ckpt) with an average score of XX over 100 episodes is included in this repository.
+A [trained model](saved_models/tennis_ddpg.ckpt) with an average score of 1.26 over 100 episodes is included in this repository.
 
 For a more complete description of the results, refer to the [report](report.md) page.
 
-To visualise the trained agent run:
+To visualise the trained agent either follow [this link](https://youtu.be/tr3Vv3ya0UQ) or run:
 
 ```
-python watch_trained_tennis.py --agent data/ppo.ckpt
+python watch_trained_tennis.py --agent data/tennis_ddpg.ckpt
 ``` 
 
 ## Installation

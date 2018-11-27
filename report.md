@@ -50,7 +50,7 @@ Noise decay rate |  0.99995 | Decay rate used to scale the noise level per episo
 
 ## Further work 
 
-- Use a multi-agent training algorithm such as [MMADPG](https://arxiv.org/abs/1706.02275)
-- Modify the DDPG to use a prioritied experience replay to accelerate and stabilize training
-- Modify the exploration behavior of the agent to favorise exploration. For example, use [parameter noise](https://blog.openai.com/better-exploration-with-parameter-noise/)
+- Use a multi-agent training algorithm such as [MMADPG](https://arxiv.org/abs/1706.02275).
+- Modify the DDPG to use a prioritied experience replay to accelerate and stabilize training.
+- Modify the exploration behavior of the agent to favorise exploration. For example, use [parameter noise](https://blog.openai.com/better-exploration-with-parameter-noise/).
 
