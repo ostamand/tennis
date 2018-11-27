@@ -7,11 +7,11 @@ The figure below illustrates the average score over the last 100 episodes obtain
 
 ![Average Score](assets/score_train.png)
 
-It is observed that, with the proposed network architecture and hyperparameters, the learning is stable. The environment is solved in 603 episodes and the final score converges to a maximum of XX.
+It is observed that, with the proposed network architecture and hyperparameters, the learning is stable. The environment is solved in 603 episodes and the final score converges to a maximum of 1.26.
 
 ## Network Architecture 
 
-Both agent states and actions are combined in single vectors for training. Actor and critic networks with continuous action space are used. The tables below summarize the network architecture.
+Both agent states and actions are combined for training. Actor and critic networks with continuous action space are used. The tables below summarize the architecture used.
 
 ### Critic 
 
